@@ -211,7 +211,15 @@ class SuperAdminManager {
     createAdminCard(admin, adminId) {
         const card = document.createElement('div');
         const isDeleted = admin.status === 'deleted' || !admin.isActive;
-        card.className = `admin-item ${isDeleted ? 'admin-deleted' : ''}`;
+        card.className = `admin-item admin-card ${isDeleted ? 'admin-deleted' : ''}`;
+        
+        // Add click event to show modal
+        card.addEventListener('click', (e) => {
+            // Don't open modal if clicking on action buttons
+            if (!e.target.closest('.admin-actions')) {
+                this.showAdminDetailsModal(admin, adminId);
+            }
+        });
         
         const createdDate = admin.createdAt ? 
             admin.createdAt.toDate().toLocaleDateString() : 
@@ -233,8 +241,8 @@ class SuperAdminManager {
                 <span class="admin-role">${admin.role}</span>
                 <div class="admin-actions">
                     ${isDeleted ? 
-                        `<button class="btn btn-secondary btn-small" onclick="superAdminManager.restoreAdmin('${adminId}', '${admin.email}')">Restore</button>` :
-                        `<button class="btn btn-danger btn-small delete-admin-btn" onclick="superAdminManager.deleteAdmin('${adminId}', '${admin.email}')">Delete</button>`
+                        `<button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); superAdminManager.restoreAdmin('${adminId}', '${admin.email}')">Restore</button>` :
+                        `<button class="btn btn-danger btn-small delete-admin-btn" onclick="event.stopPropagation(); superAdminManager.deleteAdmin('${adminId}', '${admin.email}')">Delete</button>`
                     }
                 </div>
             </div>
@@ -248,37 +256,60 @@ class SuperAdminManager {
                     <span class="detail-value">${admin.hotelWebsite || 'Not provided'}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Notification Email</span>
-                    <span class="detail-value">${admin.notificationEmail || 'Not provided'}</span>
-                </div>
-                <div class="detail-item">
                     <span class="detail-label">Created Date</span>
                     <span class="detail-value">${createdDate}</span>
-                </div>
-                ${deletedDate ? `
-                    <div class="detail-item">
-                        <span class="detail-label">Deleted Date</span>
-                        <span class="detail-value">${deletedDate}</span>
-                    </div>
-                ` : ''}
-                <div class="detail-item">
-                    <span class="detail-label">Image URL</span>
-                    <span class="detail-value">${admin.hotelImageURL || 'Default'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Status</span>
                     <span class="detail-value ${statusClass}">${statusText}</span>
                 </div>
             </div>
-            ${admin.hotelDescription ? `
-                <div class="admin-description">
-                    <span class="detail-label">Description</span>
-                    <p>${admin.hotelDescription}</p>
-                </div>
-            ` : ''}
         `;
 
         return card;
+    }
+
+    showAdminDetailsModal(admin, adminId) {
+        // Populate modal with admin data
+        document.getElementById('modal-admin-email').textContent = admin.email;
+        document.getElementById('modal-hotel-name').textContent = admin.hotelName;
+        document.getElementById('modal-hotel-description').textContent = admin.hotelDescription || 'Not provided';
+        
+        const websiteLink = document.getElementById('modal-hotel-website');
+        if (admin.hotelWebsite) {
+            websiteLink.href = admin.hotelWebsite;
+            websiteLink.textContent = admin.hotelWebsite;
+            websiteLink.style.display = 'inline';
+        } else {
+            websiteLink.style.display = 'none';
+        }
+        
+        const hotelImage = document.getElementById('modal-hotel-image');
+        hotelImage.src = admin.hotelImageURL || 'images/hotel-logo.png';
+        
+        document.getElementById('modal-notification-email').textContent = admin.notificationEmail || 'Not provided';
+        
+        const createdDate = admin.createdAt ? admin.createdAt.toDate().toLocaleString() : 'Unknown';
+        document.getElementById('modal-created-at').textContent = createdDate;
+        
+        const isDeleted = admin.status === 'deleted' || !admin.isActive;
+        const statusBadge = document.getElementById('modal-admin-status');
+        statusBadge.textContent = isDeleted ? (admin.status === 'deleted' ? 'Deleted' : 'Inactive') : 'Active';
+        statusBadge.className = `status-badge ${isDeleted ? 'status-deleted' : 'status-active'}`;
+        
+        // Set feedback URL
+        const feedbackUrl = `${window.location.origin}/guest-feedback.html?hotel=${adminId}`;
+        document.getElementById('modal-feedback-url').value = feedbackUrl;
+        
+        // Set up delete button
+        const deleteBtn = document.getElementById('modal-delete-admin-btn');
+        deleteBtn.onclick = () => {
+            closeModal('admin-details-modal');
+            this.deleteAdmin(adminId, admin.email);
+        };
+        
+        // Show modal
+        document.getElementById('admin-details-modal').style.display = 'flex';
     }
 
     showMessage(message, type = 'success') {
@@ -425,4 +456,37 @@ let superAdminManager;
 // Initialize SuperAdmin functionality when page loads
 document.addEventListener('DOMContentLoaded', () => {
     superAdminManager = new SuperAdminManager();
+});
+
+// Global modal functions
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Copy feedback URL function
+function copyFeedbackUrl() {
+    const urlInput = document.getElementById('modal-feedback-url');
+    urlInput.select();
+    urlInput.setSelectionRange(0, 99999); // For mobile devices
+    
+    try {
+        document.execCommand('copy');
+        alert('Feedback URL copied to clipboard!');
+    } catch (err) {
+        console.error('Failed to copy URL:', err);
+        alert('Failed to copy URL. Please copy manually.');
+    }
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', (event) => {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
 });

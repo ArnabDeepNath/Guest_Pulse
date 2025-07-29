@@ -422,6 +422,14 @@ class AdminManager {
         const card = document.createElement('div');
         card.className = `feedback-item ${feedback.isEverythingOkay ? 'positive' : 'issue'}`;
         
+        // Add click event to show modal
+        card.addEventListener('click', (e) => {
+            // Don't open modal if clicking on delete button
+            if (!e.target.closest('.delete-feedback-btn')) {
+                this.showFeedbackDetailsModal(feedback, feedbackId);
+            }
+        });
+        
         const submittedDate = feedback.submittedAt ? 
             feedback.submittedAt.toDate().toLocaleString() : 
             'Unknown date';
@@ -466,7 +474,7 @@ class AdminManager {
                 <span class="feedback-status ${feedback.isEverythingOkay ? 'positive' : 'issue'}">
                     ${feedback.isEverythingOkay ? 'Positive' : 'Issue Reported'}
                 </span>
-                <button class="btn btn-danger btn-small delete-feedback-btn" onclick="adminManager.deleteFeedback('${feedbackId}')">
+                <button class="btn btn-danger btn-small delete-feedback-btn" onclick="event.stopPropagation(); adminManager.deleteFeedback('${feedbackId}')">
                     Delete
                 </button>
             </div>
@@ -475,6 +483,49 @@ class AdminManager {
         `;
 
         return card;
+    }
+
+    showFeedbackDetailsModal(feedback, feedbackId) {
+        // Populate modal with feedback data
+        document.getElementById('modal-room-number').textContent = feedback.guestRoom;
+        
+        const feedbackTypeBadge = document.getElementById('modal-feedback-type');
+        feedbackTypeBadge.textContent = feedback.isEverythingOkay ? 'Positive Feedback' : 'Issue Reported';
+        feedbackTypeBadge.className = `status-badge ${feedback.isEverythingOkay ? 'positive' : 'issue'}`;
+        
+        const submittedDate = feedback.submittedAt ? 
+            feedback.submittedAt.toDate().toLocaleString() : 
+            'Unknown date';
+        document.getElementById('modal-submitted-at').textContent = submittedDate;
+        
+        // Handle issues section
+        const issuesSection = document.getElementById('modal-issues-section');
+        const positiveSection = document.getElementById('modal-positive-section');
+        
+        if (feedback.isEverythingOkay) {
+            issuesSection.style.display = 'none';
+            positiveSection.style.display = 'block';
+        } else {
+            issuesSection.style.display = 'block';
+            positiveSection.style.display = 'none';
+            
+            // Populate issue details
+            const issues = feedback.issues || {};
+            document.getElementById('modal-room-cleanliness').textContent = this.formatValue(issues.roomCleanliness);
+            document.getElementById('modal-amenities').textContent = this.formatValue(issues.amenities);
+            document.getElementById('modal-staff-behavior').textContent = this.formatValue(issues.staffBehavior);
+            document.getElementById('modal-other-issues').textContent = issues.otherIssues || 'N/A';
+        }
+        
+        // Set up delete button
+        const deleteBtn = document.getElementById('modal-delete-feedback-btn');
+        deleteBtn.onclick = () => {
+            closeModal('feedback-details-modal');
+            this.deleteFeedback(feedbackId);
+        };
+        
+        // Show modal
+        document.getElementById('feedback-details-modal').style.display = 'flex';
     }
 
     async deleteFeedback(feedbackId) {
@@ -528,3 +579,21 @@ function initializeAdmin() {
         adminManager = new AdminManager();
     }
 }
+
+// Global modal functions
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', (event) => {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+});

@@ -98,6 +98,63 @@
         </div>
     </main>
 
+    <!-- Admin Details Modal -->
+    <div id="admin-details-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Admin Details</h3>
+                <span class="close-modal" onclick="closeModal('admin-details-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="admin-details">
+                    <div class="detail-row">
+                        <strong>Email:</strong>
+                        <span id="modal-admin-email"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Hotel Name:</strong>
+                        <span id="modal-hotel-name"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Hotel Description:</strong>
+                        <span id="modal-hotel-description"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Hotel Website:</strong>
+                        <a id="modal-hotel-website" href="#" target="_blank"></a>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Hotel Image:</strong>
+                        <img id="modal-hotel-image" src="" alt="Hotel Image" style="max-width: 200px; height: auto;">
+                    </div>
+                    <div class="detail-row">
+                        <strong>Notification Email:</strong>
+                        <span id="modal-notification-email"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Created At:</strong>
+                        <span id="modal-created-at"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Status:</strong>
+                        <span id="modal-admin-status" class="status-badge"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Feedback URL:</strong>
+                        <div class="feedback-url-container">
+                            <input type="text" id="modal-feedback-url" readonly>
+                            <button class="btn btn-small" onclick="copyFeedbackUrl()">Copy URL</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('admin-details-modal')">Close</button>
+                <button class="btn btn-danger" id="modal-delete-admin-btn">Delete Admin</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>

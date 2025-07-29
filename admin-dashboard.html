@@ -168,6 +168,60 @@
         </div>
     </main>
 
+    <!-- Feedback Details Modal -->
+    <div id="feedback-details-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Feedback Details</h3>
+                <span class="close-modal" onclick="closeModal('feedback-details-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="feedback-details">
+                    <div class="detail-row">
+                        <strong>Room Number:</strong>
+                        <span id="modal-room-number"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Feedback Type:</strong>
+                        <span id="modal-feedback-type" class="status-badge"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Submitted At:</strong>
+                        <span id="modal-submitted-at"></span>
+                    </div>
+                    <div id="modal-issues-section" class="issues-section" style="display: none;">
+                        <h4>Issues Reported:</h4>
+                        <div class="detail-row">
+                            <strong>Room Cleanliness:</strong>
+                            <span id="modal-room-cleanliness"></span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Amenities:</strong>
+                            <span id="modal-amenities"></span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Staff Behavior:</strong>
+                            <span id="modal-staff-behavior"></span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Other Issues:</strong>
+                            <span id="modal-other-issues"></span>
+                        </div>
+                    </div>
+                    <div id="modal-positive-section" class="positive-section" style="display: none;">
+                        <div class="positive-message">
+                            <p>✅ Guest reported that everything is going well with their stay!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('feedback-details-modal')">Close</button>
+                <button class="btn btn-danger" id="modal-delete-feedback-btn">Delete Feedback</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
