@@ -212,25 +212,175 @@ class GuestFeedbackManager {
 
     async sendEmailNotification(feedbackData, isPositive) {
         try {
-            // For a simple implementation, we'll create a mailto link
-            // In a production environment, you would use a backend service or EmailJS
-            const subject = `New Feedback from ${this.hotelData.name} Guest`;
-            const body = this.formatFeedbackForEmail(feedbackData, isPositive);
+            console.log('Preparing to send email notification...');
             
-            // Store the email data in Firestore for potential backend processing
-            await feedbackRef.add({
-                type: 'email_notification',
-                to: this.hotelData.notificationEmail,
-                subject: subject,
-                body: body,
-                feedbackData: feedbackData,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                sent: false
-            });
+            // Check if email configuration is available
+            if (typeof emailConfig === 'undefined') {
+                console.error('Email configuration not loaded');
+                return await this.sendEmailFallback(feedbackData, isPositive);
+            }
+            
+            // Check if notification email exists
+            if (!this.hotelData.notificationEmail || this.hotelData.notificationEmail.trim() === '') {
+                console.error('No notification email configured for this hotel');
+                return await this.sendEmailFallback(feedbackData, isPositive);
+            }
+            
+            // Prepare email data with standard EmailJS field names
+            const emailData = {
+                // Multiple email field formats for compatibility
+                to_email: this.hotelData.notificationEmail,
+                email: this.hotelData.notificationEmail,
+                recipient_email: this.hotelData.notificationEmail,
+                reply_to: this.hotelData.notificationEmail,
+                
+                to_name: this.hotelData.name + ' Team',
+                from_name: 'Hotel Feedback System',
+                hotel_name: this.hotelData.name,
+                guest_room: feedbackData.guestRoom,
+                feedback_date: new Date().toLocaleString(),
+                is_positive: isPositive,
+                status: isPositive ? 'Positive Feedback' : 'Issue Reported',
+                room_cleanliness: feedbackData.issues?.roomCleanliness || 'N/A',
+                service_quality: feedbackData.issues?.staffBehavior || 'N/A',
+                amenities: feedbackData.issues?.amenities || 'N/A',
+                other_issues: feedbackData.issues?.otherIssues || 'N/A',
+                feedback_url: window.location.href,
+                subject: emailConfig.templates.subject.replace('{{hotel_name}}', this.hotelData.name),
+                message: isPositive ? 'Guest reported that everything is going well with their stay!' : 'Guest has reported some issues that need attention.'
+            };
+            
+            // Debug logging
+            console.log('Hotel notification email:', this.hotelData.notificationEmail);
+            console.log('Email data prepared:', emailData);
+            
+            // Add the formatted body after emailData is created
+            emailData.body = this.formatEmailBody(isPositive, emailData);
+            
+            // Try to send email using EmailJS
+            if (typeof emailjs !== 'undefined' && emailConfig.emailjs.publicKey !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+                console.log('Sending email via EmailJS...');
+                const result = await emailjs.send(
+                    emailConfig.emailjs.serviceID,
+                    emailConfig.emailjs.templateID,
+                    emailData,
+                    emailConfig.emailjs.publicKey
+                );
+                console.log('Email sent successfully:', result);
+                return;
+            }
+            
+            // Try webhook if configured
+            if (emailConfig.webhook.enabled && emailConfig.webhook.url) {
+                console.log('Sending email via webhook...');
+                const response = await fetch(emailConfig.webhook.url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(emailData)
+                });
+                
+                if (response.ok) {
+                    console.log('Email sent successfully via webhook');
+                    return;
+                }
+            }
+            
+            // Fallback to storing for backend processing
+            console.log('Using fallback email method...');
+            await this.sendEmailFallback(emailData, isPositive);
             
         } catch (error) {
             console.error('Error sending email notification:', error);
             // Don't throw error to avoid disrupting the feedback flow
+            // Create emailData for fallback if it doesn't exist
+            const fallbackEmailData = {
+                to_name: this.hotelData.name + ' Team',
+                to_email: this.hotelData.notificationEmail,
+                from_name: 'Hotel Feedback System',
+                hotel_name: this.hotelData.name,
+                guest_room: feedbackData.guestRoom,
+                feedback_date: new Date().toLocaleString(),
+                is_positive: isPositive,
+                status: isPositive ? 'Positive Feedback' : 'Issue Reported',
+                room_cleanliness: feedbackData.issues?.roomCleanliness || 'N/A',
+                service_quality: feedbackData.issues?.staffBehavior || 'N/A',
+                amenities: feedbackData.issues?.amenities || 'N/A',
+                other_issues: feedbackData.issues?.otherIssues || 'N/A',
+                feedback_url: window.location.href,
+                subject: (typeof emailConfig !== 'undefined' ? emailConfig.templates.subject.replace('{{hotel_name}}', this.hotelData.name) : `New Feedback from ${this.hotelData.name} Guest`),
+                message: isPositive ? 'Guest reported that everything is going well with their stay!' : 'Guest has reported some issues that need attention.'
+            };
+            fallbackEmailData.body = this.formatEmailBody(isPositive, fallbackEmailData);
+            
+            await this.sendEmailFallback(fallbackEmailData, isPositive);
+        }
+    }
+
+    formatEmailBody(isPositive, emailData) {
+        let template = isPositive ? emailConfig.templates.positiveBody : emailConfig.templates.issueBody;
+        
+        // Replace template variables
+        Object.keys(emailData).forEach(key => {
+            const placeholder = `{{${key}}}`;
+            template = template.replace(new RegExp(placeholder, 'g'), emailData[key]);
+        });
+        
+        return template;
+    }
+
+    async sendEmailFallback(emailData, isPositive) {
+        try {
+            // Fallback 1: Store in Firestore for backend processing
+            await feedbackRef.add({
+                type: 'email_notification',
+                emailData: emailData,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                sent: false,
+                method: 'pending_backend_processing'
+            });
+            console.log('Email notification stored for backend processing');
+            
+            // Fallback 2: Create mailto link as last resort
+            this.createMailtoLink(emailData);
+            
+        } catch (error) {
+            console.error('Error in email fallback:', error);
+        }
+    }
+
+    createMailtoLink(emailData) {
+        try {
+            const subject = `New Feedback from ${emailData.hotel_name} Guest`;
+            const body = `
+New feedback received from ${emailData.hotel_name}
+
+Room Number: ${emailData.guest_room}
+Date: ${emailData.feedback_date}
+Status: ${emailData.status}
+
+${!emailData.is_positive ? `
+Issues Reported:
+- Room Cleanliness: ${emailData.room_cleanliness}
+- Service Quality: ${emailData.service_quality}
+- Amenities: ${emailData.amenities}
+- Other Issues: ${emailData.other_issues}
+` : 'Guest reported that everything is going well with their stay.'}
+
+This email was generated automatically from your hotel feedback system.
+            `.trim();
+            
+            const mailtoLink = `mailto:${emailData.to_email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            // Store the mailto link for potential use
+            console.log('Mailto link created:', mailtoLink);
+            
+            // You could uncomment this to automatically open the user's email client
+            // window.open(mailtoLink);
+            
+        } catch (error) {
+            console.error('Error creating mailto link:', error);
         }
     }
 

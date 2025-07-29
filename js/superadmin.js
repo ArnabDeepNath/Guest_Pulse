@@ -210,19 +210,33 @@ class SuperAdminManager {
 
     createAdminCard(admin, adminId) {
         const card = document.createElement('div');
-        card.className = 'admin-item';
+        const isDeleted = admin.status === 'deleted' || !admin.isActive;
+        card.className = `admin-item ${isDeleted ? 'admin-deleted' : ''}`;
         
         const createdDate = admin.createdAt ? 
             admin.createdAt.toDate().toLocaleDateString() : 
             'Unknown';
 
+        const deletedDate = admin.deletedAt ? 
+            admin.deletedAt.toDate().toLocaleDateString() : 
+            null;
+
+        const statusText = isDeleted ? 
+            (admin.status === 'deleted' ? 'Deleted' : 'Inactive') : 
+            'Active';
+
+        const statusClass = isDeleted ? 'status-deleted' : 'status-active';
+
         card.innerHTML = `
             <div class="admin-item-header">
-                <span class="admin-email">${admin.email}</span>
+                <span class="admin-email ${isDeleted ? 'deleted-email' : ''}">${admin.email}</span>
                 <span class="admin-role">${admin.role}</span>
-                <button class="btn btn-danger btn-small delete-admin-btn" onclick="superAdminManager.deleteAdmin('${adminId}', '${admin.email}')">
-                    Delete
-                </button>
+                <div class="admin-actions">
+                    ${isDeleted ? 
+                        `<button class="btn btn-secondary btn-small" onclick="superAdminManager.restoreAdmin('${adminId}', '${admin.email}')">Restore</button>` :
+                        `<button class="btn btn-danger btn-small delete-admin-btn" onclick="superAdminManager.deleteAdmin('${adminId}', '${admin.email}')">Delete</button>`
+                    }
+                </div>
             </div>
             <div class="admin-details">
                 <div class="detail-item">
@@ -241,13 +255,19 @@ class SuperAdminManager {
                     <span class="detail-label">Created Date</span>
                     <span class="detail-value">${createdDate}</span>
                 </div>
+                ${deletedDate ? `
+                    <div class="detail-item">
+                        <span class="detail-label">Deleted Date</span>
+                        <span class="detail-value">${deletedDate}</span>
+                    </div>
+                ` : ''}
                 <div class="detail-item">
                     <span class="detail-label">Image URL</span>
                     <span class="detail-value">${admin.hotelImageURL || 'Default'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Status</span>
-                    <span class="detail-value">${admin.isActive ? 'Active' : 'Inactive'}</span>
+                    <span class="detail-value ${statusClass}">${statusText}</span>
                 </div>
             </div>
             ${admin.hotelDescription ? `
@@ -269,26 +289,118 @@ class SuperAdminManager {
     }
 
     async deleteAdmin(adminId, adminEmail) {
-        if (!confirm(`Are you sure you want to delete admin: ${adminEmail}?\n\nThis will:\n- Delete the admin account\n- Remove all associated data\n- This action cannot be undone.`)) {
-            return;
+        const deleteOption = confirm(`Choose deletion method for admin: ${adminEmail}\n\nClick OK for SOFT DELETE (recommended):\n- Marks admin as inactive in database\n- Preserves data for audit purposes\n- Firebase Auth user remains\n\nClick Cancel for HARD DELETE:\n- Permanently removes admin data\n- Firebase Auth user will remain active\n- Requires manual cleanup in Firebase Console`);
+        
+        if (deleteOption) {
+            // Soft delete - mark as inactive
+            await this.softDeleteAdmin(adminId, adminEmail);
+        } else {
+            // Hard delete - remove from Firestore only
+            await this.hardDeleteAdmin(adminId, adminEmail);
         }
+    }
 
+    async softDeleteAdmin(adminId, adminEmail) {
         try {
-            // Delete admin document from Firestore
-            await adminsRef.doc(adminId).delete();
+            console.log(`Soft deleting admin: ${adminId}`);
             
-            // Note: In a production environment, you would also want to delete the Firebase Auth user
-            // This requires Firebase Admin SDK on the backend
+            // Update admin document to mark as deleted/inactive
+            await adminsRef.doc(adminId).update({
+                isActive: false,
+                deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                deletedBy: this.currentUser.uid,
+                status: 'deleted'
+            });
             
-            this.showMessage('Admin deleted successfully', 'success');
+            console.log('Admin marked as deleted successfully');
+            
+            this.showMessage(`Admin ${adminEmail} has been deactivated successfully. The Firebase Authentication user account remains active but the admin cannot access the system.`, 'success');
             
             // Reload the admins list
             await this.loadAdmins();
             
         } catch (error) {
-            console.error('Error deleting admin:', error);
-            const message = this.getFirebaseErrorMessage(error.code) || 'Failed to delete admin. Please try again.';
-            this.showMessage(message, 'error');
+            console.error('Error soft deleting admin:', error);
+            this.handleDeleteError(error);
+        }
+    }
+
+    async hardDeleteAdmin(adminId, adminEmail) {
+        if (!confirm(`HARD DELETE WARNING!\n\nThis will permanently remove admin data for: ${adminEmail}\n\nIMPORTANT NOTES:\n- The Firebase Authentication user will NOT be deleted\n- You must manually delete the user from Firebase Console > Authentication\n- All admin data will be permanently lost\n\nContinue with hard delete?`)) {
+            return;
+        }
+
+        try {
+            console.log(`Hard deleting admin: ${adminId}`);
+            
+            // Check if current user is authenticated
+            if (!this.currentUser) {
+                throw new Error('User not authenticated');
+            }
+            
+            console.log(`Current user: ${this.currentUser.email}`);
+            
+            // Delete admin document from Firestore
+            await adminsRef.doc(adminId).delete();
+            
+            console.log('Admin deleted successfully from Firestore');
+            
+            this.showMessage(`Admin ${adminEmail} has been removed from the database.\n\nIMPORTANT: You must manually delete the Firebase Authentication user:\n1. Go to Firebase Console\n2. Authentication > Users\n3. Find and delete: ${adminEmail}`, 'warning');
+            
+            // Reload the admins list
+            await this.loadAdmins();
+            
+        } catch (error) {
+            console.error('Error hard deleting admin:', error);
+            this.handleDeleteError(error);
+        }
+    }
+
+    handleDeleteError(error) {
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        
+        let message = 'Failed to delete admin. ';
+        
+        if (error.code === 'permission-denied') {
+            message += 'You do not have permission to delete this admin. Please ensure you are logged in as SuperAdmin.';
+        } else if (error.code === 'not-found') {
+            message += 'Admin not found. It may have already been deleted.';
+        } else {
+            message += error.message || 'Please try again.';
+        }
+        
+        this.showMessage(message, 'error');
+    }
+
+    async restoreAdmin(adminId, adminEmail) {
+        if (!confirm(`Restore admin access for: ${adminEmail}?\n\nThis will:\n- Reactivate the admin account\n- Allow access to the system\n- Remove deleted status`)) {
+            return;
+        }
+
+        try {
+            console.log(`Restoring admin: ${adminId}`);
+            
+            // Update admin document to restore access
+            await adminsRef.doc(adminId).update({
+                isActive: true,
+                deletedAt: firebase.firestore.FieldValue.delete(),
+                deletedBy: firebase.firestore.FieldValue.delete(),
+                status: firebase.firestore.FieldValue.delete(),
+                restoredAt: firebase.firestore.FieldValue.serverTimestamp(),
+                restoredBy: this.currentUser.uid
+            });
+            
+            console.log('Admin restored successfully');
+            
+            this.showMessage(`Admin ${adminEmail} has been restored successfully and can now access the system again.`, 'success');
+            
+            // Reload the admins list
+            await this.loadAdmins();
+            
+        } catch (error) {
+            console.error('Error restoring admin:', error);
+            this.handleDeleteError(error);
         }
     }
 

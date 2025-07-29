@@ -7,12 +7,12 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
     
-    // Admin collection - SuperAdmins can create/read, Admins can read their own data
+    // Admin collection - SuperAdmins can create/read/delete, Admins can read their own data
     match /admins/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null;
       allow read: if request.auth != null; // Allow SuperAdmins to read all admin docs
-      allow delete: if false; // Prevent deletion for data integrity
+      allow delete: if request.auth != null; // Allow authenticated users (SuperAdmins) to delete admins
     }
     
     // Feedback collection - open for creation (guests), authenticated users can read, admins can delete
