@@ -54,7 +54,10 @@
                             <div id="qr-code-container" class="qr-code-container">
                                 <div id="qr-code"></div>
                             </div>
-                            <button class="btn btn-secondary" id="download-qr-btn">Download QR Code</button>
+                            <div class="qr-actions">
+                                <button class="btn btn-secondary btn-small" id="download-qr-btn">Download QR Code</button>
+                                <button class="btn btn-secondary btn-small" id="generate-online-qr-btn">Generate Online</button>
+                            </div>
                         </div>
                     </div>
                     
@@ -170,12 +173,19 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
-    <!-- QR Code Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- QR Code Library - Using a more reliable CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     
     <!-- App Scripts -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
+    <script>
+        // Check QR library loading
+        window.addEventListener('load', () => {
+            console.log('Checking QR library - qrcode available:', typeof qrcode !== 'undefined');
+            console.log('Window.qrcode:', window.qrcode);
+        });
+    </script>
     <script src="js/admin.js"></script>
 </body>
 </html>

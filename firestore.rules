@@ -15,7 +15,7 @@ service cloud.firestore {
       allow delete: if false; // Prevent deletion for data integrity
     }
     
-    // Feedback collection - open for creation (guests), authenticated users can read
+    // Feedback collection - open for creation (guests), authenticated users can read, admins can delete
     match /feedback/{feedbackId} {
       // Allow guests to submit feedback (no authentication required)
       allow create: if true;
@@ -23,8 +23,11 @@ service cloud.firestore {
       // Allow authenticated users to read feedback
       allow read: if request.auth != null;
       
-      // Prevent updates and deletes to maintain feedback integrity
-      allow update, delete: if false;
+      // Allow admins to delete feedback
+      allow delete: if request.auth != null;
+      
+      // Prevent updates to maintain feedback integrity
+      allow update: if false;
     }
     
     // Catch-all rule - deny everything else

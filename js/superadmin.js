@@ -220,11 +220,22 @@ class SuperAdminManager {
             <div class="admin-item-header">
                 <span class="admin-email">${admin.email}</span>
                 <span class="admin-role">${admin.role}</span>
+                <button class="btn btn-danger btn-small delete-admin-btn" onclick="superAdminManager.deleteAdmin('${adminId}', '${admin.email}')">
+                    Delete
+                </button>
             </div>
             <div class="admin-details">
                 <div class="detail-item">
                     <span class="detail-label">Hotel Name</span>
                     <span class="detail-value">${admin.hotelName}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Website</span>
+                    <span class="detail-value">${admin.hotelWebsite || 'Not provided'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Notification Email</span>
+                    <span class="detail-value">${admin.notificationEmail || 'Not provided'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Created Date</span>
@@ -257,6 +268,30 @@ class SuperAdminManager {
         }
     }
 
+    async deleteAdmin(adminId, adminEmail) {
+        if (!confirm(`Are you sure you want to delete admin: ${adminEmail}?\n\nThis will:\n- Delete the admin account\n- Remove all associated data\n- This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            // Delete admin document from Firestore
+            await adminsRef.doc(adminId).delete();
+            
+            // Note: In a production environment, you would also want to delete the Firebase Auth user
+            // This requires Firebase Admin SDK on the backend
+            
+            this.showMessage('Admin deleted successfully', 'success');
+            
+            // Reload the admins list
+            await this.loadAdmins();
+            
+        } catch (error) {
+            console.error('Error deleting admin:', error);
+            const message = this.getFirebaseErrorMessage(error.code) || 'Failed to delete admin. Please try again.';
+            this.showMessage(message, 'error');
+        }
+    }
+
     getFirebaseErrorMessage(errorCode) {
         const errorMessages = {
             'auth/email-already-in-use': 'This email address is already registered.',
@@ -272,7 +307,10 @@ class SuperAdminManager {
     }
 }
 
+// Global superadmin manager instance  
+let superAdminManager;
+
 // Initialize SuperAdmin functionality when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new SuperAdminManager();
+    superAdminManager = new SuperAdminManager();
 });

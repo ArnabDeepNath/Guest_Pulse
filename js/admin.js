@@ -28,7 +28,9 @@ class AdminManager {
                 this.hotelData = {
                     name: this.currentAdmin.hotelName,
                     imageURL: this.currentAdmin.hotelImageURL,
-                    description: this.currentAdmin.hotelDescription
+                    description: this.currentAdmin.hotelDescription,
+                    website: this.currentAdmin.hotelWebsite,
+                    notificationEmail: this.currentAdmin.notificationEmail
                 };
             } else {
                 throw new Error('Admin data not found');
@@ -62,6 +64,12 @@ class AdminManager {
         const downloadQrBtn = document.getElementById('download-qr-btn');
         if (downloadQrBtn) {
             downloadQrBtn.addEventListener('click', () => this.downloadQRCode());
+        }
+
+        // Generate online QR code
+        const generateOnlineQrBtn = document.getElementById('generate-online-qr-btn');
+        if (generateOnlineQrBtn) {
+            generateOnlineQrBtn.addEventListener('click', () => this.generateOnlineQRCode());
         }
 
         // Refresh feedback
@@ -119,45 +127,159 @@ class AdminManager {
             const feedbackUrl = `${baseUrl}guest-feedback.html?hotel=${this.currentUser.uid}`;
             feedbackLinkInput.value = feedbackUrl;
             
-            // Generate QR code
-            this.generateQRCode(feedbackUrl);
+            // Generate QR code with retry mechanism
+            this.generateQRCodeWithRetry(feedbackUrl, 0);
+        }
+    }
+
+    async generateQRCodeWithRetry(url, retryCount = 0) {
+        if (retryCount > 5) {
+            console.error('QR code generation failed after multiple attempts');
+            this.showQRFallback();
+            return;
+        }
+
+        if (typeof qrcode !== 'undefined') {
+            await this.generateQRCode(url);
+        } else {
+            console.log(`QR library not ready, retrying in ${(retryCount + 1) * 500}ms...`);
+            setTimeout(() => {
+                this.generateQRCodeWithRetry(url, retryCount + 1);
+            }, (retryCount + 1) * 500);
         }
     }
 
     async generateQRCode(url) {
         try {
+            console.log('Generating QR code for URL:', url);
             const qrCodeElement = document.getElementById('qr-code');
-            if (qrCodeElement && typeof QRCode !== 'undefined') {
-                // Clear previous QR code
-                qrCodeElement.innerHTML = '';
-                
-                // Generate new QR code
-                await QRCode.toCanvas(qrCodeElement, url, {
-                    width: 200,
-                    height: 200,
-                    color: {
-                        dark: '#000000',
-                        light: '#ffffff'
-                    }
-                });
+            console.log('QR code element:', qrCodeElement);
+            console.log('qrcode library available:', typeof qrcode !== 'undefined');
+            
+            if (!qrCodeElement) {
+                console.error('QR code element not found');
+                return;
             }
+
+            if (typeof qrcode === 'undefined') {
+                console.error('qrcode library not loaded');
+                this.showQRFallback();
+                return;
+            }
+                
+            // Clear previous QR code
+            qrCodeElement.innerHTML = '';
+            
+            // Create QR code using qrcode-generator library
+            const qr = qrcode(0, 'M');
+            qr.addData(url);
+            qr.make();
+            
+            // Create the QR code as an image
+            const qrImage = qr.createImgTag(4, 8); // cellSize=4, margin=8
+            qrCodeElement.innerHTML = qrImage;
+            
+            // Style the image
+            const img = qrCodeElement.querySelector('img');
+            if (img) {
+                img.style.maxWidth = '200px';
+                img.style.height = 'auto';
+                img.style.border = '1px solid #ddd';
+                img.style.borderRadius = '8px';
+            }
+            
+            console.log('QR code generated successfully');
+                
         } catch (error) {
             console.error('Error generating QR code:', error);
+            this.showQRFallback();
+        }
+    }
+
+    showQRFallback() {
+        const qrCodeElement = document.getElementById('qr-code');
+        if (qrCodeElement) {
+            console.log('Trying online QR generation as fallback...');
+            const feedbackLinkInput = document.getElementById('feedback-link-input');
+            
+            if (feedbackLinkInput && feedbackLinkInput.value) {
+                const url = feedbackLinkInput.value;
+                const qrServiceUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+                
+                qrCodeElement.innerHTML = `
+                    <img src="${qrServiceUrl}" 
+                         alt="QR Code for Feedback Link" 
+                         style="max-width: 200px; height: auto; border: 1px solid #ddd; border-radius: 8px;"
+                         onload="console.log('Fallback online QR code loaded successfully')"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display: none; padding: 20px; text-align: center; color: #666; border: 1px dashed #ccc; border-radius: 8px;">
+                        <p><strong>QR Code generation failed</strong></p>
+                        <p style="font-size: 0.9rem;">Please use the feedback link above to share with guests.</p>
+                        <p style="font-size: 0.8rem; margin-top: 10px;">You can click "Generate Online" to try again.</p>
+                    </div>
+                `;
+            } else {
+                qrCodeElement.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #666; border: 1px dashed #ccc; border-radius: 8px;">
+                        <p><strong>QR Code generation failed</strong></p>
+                        <p style="font-size: 0.9rem;">Please use the feedback link above to share with guests.</p>
+                        <p style="font-size: 0.8rem; margin-top: 10px;">You can click "Generate Online" to try again.</p>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    generateOnlineQRCode() {
+        const feedbackLinkInput = document.getElementById('feedback-link-input');
+        if (feedbackLinkInput && feedbackLinkInput.value) {
+            const url = feedbackLinkInput.value;
+            const qrServiceUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+            
+            const qrCodeElement = document.getElementById('qr-code');
+            if (qrCodeElement) {
+                qrCodeElement.innerHTML = `
+                    <img src="${qrServiceUrl}" 
+                         alt="QR Code for Feedback Link" 
+                         style="max-width: 200px; height: auto; border: 1px solid #ddd; border-radius: 8px;"
+                         onload="console.log('Online QR code loaded successfully')"
+                         onerror="console.error('Failed to load online QR code'); this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display: none; padding: 20px; text-align: center; color: #666; border: 1px dashed #ccc; border-radius: 8px;">
+                        <p>Unable to generate QR code</p>
+                        <p style="font-size: 0.9rem;">Please use the feedback link above</p>
+                    </div>
+                `;
+                console.log('Online QR code generation initiated');
+            }
         }
     }
 
     async downloadQRCode() {
         try {
-            const canvas = document.querySelector('#qr-code canvas');
-            if (canvas) {
+            const img = document.querySelector('#qr-code img');
+            if (img) {
+                // Create a canvas to convert the image
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas size to match image
+                canvas.width = img.naturalWidth || img.width;
+                canvas.height = img.naturalHeight || img.height;
+                
+                // Draw the image on canvas
+                ctx.drawImage(img, 0, 0);
+                
+                // Create download link
                 const link = document.createElement('a');
-                link.download = `${this.hotelData.name}-feedback-qr.png`;
-                link.href = canvas.toDataURL();
+                link.download = `${this.hotelData.name.replace(/[^a-zA-Z0-9]/g, '_')}-feedback-qr.png`;
+                link.href = canvas.toDataURL('image/png');
                 link.click();
+            } else {
+                alert('QR code not available for download. Please refresh the page and try again.');
             }
         } catch (error) {
             console.error('Error downloading QR code:', error);
-            alert('Failed to download QR code');
+            alert('Failed to download QR code. You can right-click the QR code and save the image manually.');
         }
     }
 
@@ -344,12 +466,31 @@ class AdminManager {
                 <span class="feedback-status ${feedback.isEverythingOkay ? 'positive' : 'issue'}">
                     ${feedback.isEverythingOkay ? 'Positive' : 'Issue Reported'}
                 </span>
+                <button class="btn btn-danger btn-small delete-feedback-btn" onclick="adminManager.deleteFeedback('${feedbackId}')">
+                    Delete
+                </button>
             </div>
             ${issueDetails}
             ${feedback.isEverythingOkay ? '<p class="positive-message">Guest reported that everything is going well with their stay.</p>' : ''}
         `;
 
         return card;
+    }
+
+    async deleteFeedback(feedbackId) {
+        if (!confirm('Are you sure you want to delete this feedback? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            await feedbackRef.doc(feedbackId).delete();
+            this.showFeedbackMessage('Feedback deleted successfully', 'success');
+            // Reload feedback history to update the display
+            await this.loadFeedbackHistory();
+        } catch (error) {
+            console.error('Error deleting feedback:', error);
+            this.showFeedbackMessage('Failed to delete feedback. Please try again.', 'error');
+        }
     }
 
     formatValue(value) {
@@ -364,7 +505,26 @@ class AdminManager {
     }
 }
 
-// Initialize Admin functionality when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    new AdminManager();
+// Global admin manager instance
+let adminManager;
+
+// Wait for both DOM and all scripts to load
+window.addEventListener('load', () => {
+    console.log('Window loaded, checking for qrcode library:', typeof qrcode !== 'undefined');
+    initializeAdmin();
 });
+
+// Also initialize on DOM ready as fallback
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, checking for qrcode library:', typeof qrcode !== 'undefined');
+    if (!adminManager) {
+        setTimeout(initializeAdmin, 1000); // Add small delay
+    }
+});
+
+function initializeAdmin() {
+    if (!adminManager) {
+        console.log('Initializing AdminManager...');
+        adminManager = new AdminManager();
+    }
+}
