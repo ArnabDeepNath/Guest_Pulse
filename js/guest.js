@@ -40,7 +40,9 @@ class GuestFeedbackManager {
                 this.hotelData = {
                     name: adminData.hotelName,
                     imageURL: adminData.hotelImageURL || 'images/hotel-logo.png',
-                    description: adminData.hotelDescription
+                    description: adminData.hotelDescription,
+                    website: adminData.hotelWebsite,
+                    notificationEmail: adminData.notificationEmail
                 };
             } else {
                 throw new Error('Hotel not found');
@@ -161,6 +163,12 @@ class GuestFeedbackManager {
             }
             
             await feedbackRef.add(feedbackData);
+            
+            // Send email notification if we have notification email
+            if (this.hotelData.notificationEmail) {
+                await this.sendEmailNotification(feedbackData, isEverythingOkay);
+            }
+            
             this.showThankYou(isEverythingOkay);
         } catch (error) {
             console.error('Error submitting feedback:', error);
@@ -193,6 +201,54 @@ class GuestFeedbackManager {
                 thankYouMessage.textContent = "Thank you for bringing these concerns to our attention. Our team will review your feedback and work to address any issues promptly.";
             }
         }
+
+        // Redirect to hotel website after 3 seconds
+        if (this.hotelData.website) {
+            setTimeout(() => {
+                window.open(this.hotelData.website, '_blank');
+            }, 3000);
+        }
+    }
+
+    async sendEmailNotification(feedbackData, isPositive) {
+        try {
+            // For a simple implementation, we'll create a mailto link
+            // In a production environment, you would use a backend service or EmailJS
+            const subject = `New Feedback from ${this.hotelData.name} Guest`;
+            const body = this.formatFeedbackForEmail(feedbackData, isPositive);
+            
+            // Store the email data in Firestore for potential backend processing
+            await feedbackRef.add({
+                type: 'email_notification',
+                to: this.hotelData.notificationEmail,
+                subject: subject,
+                body: body,
+                feedbackData: feedbackData,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                sent: false
+            });
+            
+        } catch (error) {
+            console.error('Error sending email notification:', error);
+            // Don't throw error to avoid disrupting the feedback flow
+        }
+    }
+
+    formatFeedbackForEmail(feedbackData, isPositive) {
+        let emailBody = `New feedback received from ${this.hotelData.name}\n\n`;
+        emailBody += `Room Number: ${feedbackData.guestRoom}\n`;
+        emailBody += `Date: ${new Date().toLocaleString()}\n`;
+        emailBody += `Status: ${isPositive ? 'Positive' : 'Issue Reported'}\n\n`;
+        
+        if (!isPositive) {
+            emailBody += "Issues Reported:\n";
+            if (feedbackData.roomCleanliness) emailBody += `- Room Cleanliness: ${feedbackData.roomCleanliness}\n`;
+            if (feedbackData.serviceQuality) emailBody += `- Service Quality: ${feedbackData.serviceQuality}\n`;
+            if (feedbackData.amenities) emailBody += `- Amenities: ${feedbackData.amenities}\n`;
+            if (feedbackData.otherIssues) emailBody += `- Other Issues: ${feedbackData.otherIssues}\n`;
+        }
+        
+        return emailBody;
     }
 
     resetForm() {

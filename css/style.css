@@ -675,6 +675,13 @@ body {
     margin-bottom: 25px;
 }
 
+.redirect-notice {
+    color: var(--primary-color) !important;
+    font-style: italic;
+    font-size: 0.9rem !important;
+    margin-bottom: 15px !important;
+}
+
 /* Footer */
 .guest-footer {
     text-align: center;
