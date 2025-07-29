@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Feedback - Hotel Feedback System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="guest-page">
+    <div class="guest-container">
+        <header class="guest-header">
+            <div class="hotel-branding">
+                <img id="hotel-logo" src="images/hotel-logo.png" alt="Hotel Logo" class="hotel-logo">
+                <h1 id="hotel-name">Loading...</h1>
+            </div>
+        </header>
+
+        <main class="guest-main">
+            <div class="feedback-card">
+                <div class="card-header">
+                    <h2>We Value Your Feedback</h2>
+                    <p>Help us improve your stay experience</p>
+                </div>
+                
+                <div class="card-body">
+                    <form id="guest-feedback-form" class="guest-feedback-form">
+                        <div class="form-group">
+                            <label for="room-number">Room Number</label>
+                            <input type="text" id="room-number" name="roomNumber" required placeholder="e.g., 312">
+                        </div>
+                        
+                        <div class="form-group primary-question">
+                            <label class="question-label">Is everything okay with your stay?</label>
+                            <div class="radio-group large-buttons">
+                                <label class="radio-option positive">
+                                    <input type="radio" name="isEverythingOkay" value="yes" required>
+                                    <span class="radio-text">
+                                        <i class="icon">😊</i>
+                                        Yes, everything is great!
+                                    </span>
+                                </label>
+                                <label class="radio-option negative">
+                                    <input type="radio" name="isEverythingOkay" value="no" required>
+                                    <span class="radio-text">
+                                        <i class="icon">😔</i>
+                                        No, I have some concerns
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Follow-up Questions (shown only if "No" is selected) -->
+                        <div id="follow-up-section" class="follow-up-section" style="display: none;">
+                            <div class="section-header">
+                                <h3>Please help us understand the issues</h3>
+                                <p>Your feedback helps us serve you better</p>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="room-cleanliness">How would you rate the room cleanliness?</label>
+                                <select id="room-cleanliness" name="roomCleanliness">
+                                    <option value="">Please select</option>
+                                    <option value="excellent">Excellent</option>
+                                    <option value="good">Good</option>
+                                    <option value="fair">Fair</option>
+                                    <option value="poor">Poor</option>
+                                    <option value="very_poor">Very Poor</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="amenities">Are there any issues with amenities?</label>
+                                <select id="amenities" name="amenities">
+                                    <option value="">Please select</option>
+                                    <option value="all_working">Everything is working fine</option>
+                                    <option value="minor_issues">Minor issues</option>
+                                    <option value="broken_ac">Air conditioning problems</option>
+                                    <option value="no_hot_water">No hot water</option>
+                                    <option value="wifi_issues">WiFi connection issues</option>
+                                    <option value="tv_issues">TV not working</option>
+                                    <option value="other">Other amenity issues</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="staff-behavior">How would you rate our staff service?</label>
+                                <select id="staff-behavior" name="staffBehavior">
+                                    <option value="">Please select</option>
+                                    <option value="excellent">Excellent</option>
+                                    <option value="good">Good</option>
+                                    <option value="fair">Fair</option>
+                                    <option value="needs_improvement">Needs improvement</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="other-issues">Additional comments or specific issues</label>
+                                <textarea id="other-issues" name="otherIssues" rows="4" placeholder="Please describe any other concerns or suggestions you may have..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-large" id="submit-btn">
+                                <span class="btn-text">Submit Feedback</span>
+                                <span class="btn-loader" style="display: none;">
+                                    <i class="spinner"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Thank You Message -->
+                    <div id="thank-you-section" class="thank-you-section" style="display: none;">
+                        <div class="success-icon">✅</div>
+                        <h2>Thank You!</h2>
+                        <p id="thank-you-message">We appreciate your feedback and will address any concerns promptly.</p>
+                        <button class="btn btn-secondary" id="submit-another-btn">Submit Another Feedback</button>
+                    </div>
+                    
+                    <div id="error-message" class="error-message" style="display: none;"></div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="guest-footer">
+            <p>Powered by Hotel Feedback System</p>
+        </footer>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/guest.js"></script>
+</body>
+</html>

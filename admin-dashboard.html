@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Hotel Feedback System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-page">
+    <header class="dashboard-header">
+        <div class="header-content">
+            <h1 id="header-hotel-name">Hotel Dashboard</h1>
+            <div class="header-actions">
+                <span class="user-info" id="user-email"></span>
+                <button class="btn btn-secondary" id="logout-btn">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Hotel Information Section -->
+            <div class="card hotel-info-card">
+                <div class="card-body">
+                    <div class="hotel-info">
+                        <div class="hotel-image-container">
+                            <img id="hotel-image" src="images/hotel-logo.png" alt="Hotel Image" class="hotel-image">
+                        </div>
+                        <div class="hotel-details">
+                            <h2 id="hotel-name-display">Loading...</h2>
+                            <p id="hotel-description-display">Loading hotel information...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guest Feedback Form Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Guest Feedback Form</h2>
+                    <p>Share this link or QR code with your guests for feedback collection</p>
+                </div>
+                <div class="card-body">
+                    <div class="feedback-link-section">
+                        <div class="feedback-link">
+                            <input type="text" id="feedback-link-input" readonly>
+                            <button class="btn btn-secondary" id="copy-link-btn">Copy Link</button>
+                        </div>
+                        <div class="qr-code-section">
+                            <h4>QR Code for Easy Sharing</h4>
+                            <div id="qr-code-container" class="qr-code-container">
+                                <div id="qr-code"></div>
+                            </div>
+                            <button class="btn btn-secondary" id="download-qr-btn">Download QR Code</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Demo Feedback Form -->
+                    <div class="demo-form-section">
+                        <h3>Demo: Guest Feedback Form</h3>
+                        <form id="guest-feedback-form" class="guest-form">
+                            <div class="form-group">
+                                <label for="guest-room">Room Number</label>
+                                <input type="text" id="guest-room" name="guestRoom" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="question-label">Is everything okay with your stay?</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="isEverythingOkay" value="yes" required>
+                                        <span class="radio-text">Yes, everything is great!</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="isEverythingOkay" value="no" required>
+                                        <span class="radio-text">No, I have some issues</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Follow-up Questions (shown only if "No" is selected) -->
+                            <div id="follow-up-questions" class="follow-up-questions" style="display: none;">
+                                <div class="form-group">
+                                    <label for="room-cleanliness">Room Cleanliness</label>
+                                    <select id="room-cleanliness" name="roomCleanliness">
+                                        <option value="">Select rating</option>
+                                        <option value="excellent">Excellent</option>
+                                        <option value="good">Good</option>
+                                        <option value="fair">Fair</option>
+                                        <option value="poor">Poor</option>
+                                        <option value="very_poor">Very Poor</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="amenities">Amenities Issues</label>
+                                    <select id="amenities" name="amenities">
+                                        <option value="">Select issue</option>
+                                        <option value="all_working">All Working Fine</option>
+                                        <option value="minor_issues">Minor Issues</option>
+                                        <option value="broken_ac">Broken AC</option>
+                                        <option value="no_hot_water">No Hot Water</option>
+                                        <option value="wifi_issues">WiFi Issues</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="staff-behavior">Staff Behavior</label>
+                                    <select id="staff-behavior" name="staffBehavior">
+                                        <option value="">Select rating</option>
+                                        <option value="excellent">Excellent</option>
+                                        <option value="good">Good</option>
+                                        <option value="fair">Fair</option>
+                                        <option value="rude">Rude</option>
+                                        <option value="unprofessional">Unprofessional</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="other-issues">Other Issues or Comments</label>
+                                    <textarea id="other-issues" name="otherIssues" rows="3" placeholder="Please describe any other issues or additional comments..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" id="submit-feedback-btn">
+                                <span class="btn-text">Submit Feedback</span>
+                                <span class="btn-loader" style="display: none;">
+                                    <i class="spinner"></i>
+                                </span>
+                            </button>
+                        </form>
+                        
+                        <div id="feedback-message" class="message" style="display: none;"></div>
+                        <div id="thank-you-message" class="thank-you-message" style="display: none;">
+                            <h3>Thank you for your feedback!</h3>
+                            <p>We appreciate you taking the time to share your experience with us.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback History Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Feedback History</h2>
+                    <div class="header-actions">
+                        <select id="feedback-filter" class="filter-select">
+                            <option value="all">All Feedback</option>
+                            <option value="issues">Issues Only</option>
+                            <option value="positive">Positive Only</option>
+                        </select>
+                        <button class="btn btn-secondary" id="refresh-feedback-btn">Refresh</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="feedback-history" class="feedback-history">
+                        <div class="loading" id="feedback-loading">Loading feedback...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

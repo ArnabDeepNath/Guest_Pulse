@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuestPulse LIVE Quick Start Guide</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #0066cc;
+            text-align: center;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #0066cc;
+            margin-top: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .step {
+            margin-bottom: 15px;
+        }
+        .step-number {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-color: #0066cc;
+            color: white;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .note {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0066cc;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .qr-example {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .code {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        @media print {
+            body {
+                max-width: 100%;
+                padding: 0;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>GuestPulse LIVE<br><small>Quick Start Guide</small></h1>
+    
+    <div class="section">
+        <h2>1. Firebase Setup</h2>
+        <div class="step">
+            <span class="step-number">1</span> Create a Firebase account at <a href="https://firebase.google.com/" target="_blank">firebase.google.com</a> if you don't have one
+        </div>
+        <div class="step">
+            <span class="step-number">2</span> Create a new Firebase project from the Firebase Console
+        </div>
+        <div class="step">
+            <span class="step-number">3</span> Add a web application to your project by clicking the web icon (</>) on the project overview page
+        </div>
+        <div class="step">
+            <span class="step-number">4</span> Copy the Firebase configuration object provided
+        </div>
+        <div class="step">
+            <span class="step-number">5</span> Open the file <strong>js/firebase-init.js</strong> in your GuestPulse LIVE project and replace the firebaseConfig object with yours:
+            <div class="code">
+const firebaseConfig = {<br>
+&nbsp;&nbsp;apiKey: "YOUR_API_KEY",<br>
+&nbsp;&nbsp;authDomain: "YOUR_PROJECT_NAME.firebaseapp.com",<br>
+&nbsp;&nbsp;projectId: "YOUR_PROJECT_ID",<br>
+&nbsp;&nbsp;storageBucket: "YOUR_PROJECT_NAME.appspot.com",<br>
+&nbsp;&nbsp;messagingSenderId: "YOUR_MESSAGING_SENDER_ID",<br>
+&nbsp;&nbsp;appId: "YOUR_APP_ID"<br>
+};
+            </div>
+        </div>
+        <div class="step">
+            <span class="step-number">6</span> Enable Email/Password Authentication in Firebase:
+            <ul>
+                <li>Go to Authentication > Sign-in method</li>
+                <li>Enable "Email/Password" authentication</li>
+            </ul>
+        </div>
+        <div class="step">
+            <span class="step-number">7</span> Set up Firestore Database:
+            <ul>
+                <li>Go to Firestore Database > Create database</li>
+                <li>Start in production mode</li>
+                <li>Choose a location close to your target users</li>
+            </ul>
+        </div>
+        <div class="step">
+            <span class="step-number">8</span> Enable Storage:
+            <ul>
+                <li>Go to Storage > Get started</li>
+                <li>Choose production mode</li>
+            </ul>
+        </div>
+        <div class="note">
+            <strong>Important:</strong> For full security, adjust the Firestore and Storage rules as described in the README.md file.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. Creating a Super Admin Account</h2>
+        <div class="step">
+            <span class="step-number">1</span> In Firebase Console, go to Authentication > Users
+        </div>
+        <div class="step">
+            <span class="step-number">2</span> Click "Add user" and enter your Super Admin email and password
+        </div>
+        <div class="step">
+            <span class="step-number">3</span> Note the User UID that is created
+        </div>
+        <div class="step">
+            <span class="step-number">4</span> Go to Firestore Database and create a collection called "users"
+        </div>
+        <div class="step">
+            <span class="step-number">5</span> Create a document with the ID matching the User UID from step 3
+        </div>
+        <div class="step">
+            <span class="step-number">6</span> Add the following fields to the document:
+            <ul>
+                <li>email: [your super admin email]</li>
+                <li>role: "superAdmin"</li>
+                <li>name: [your name]</li>
+                <li>createdAt: [server timestamp]</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Accessing the Admin Interfaces</h2>
+
+    <div class="section">
+        <h2>3. Accessing the Admin Interfaces</h2>
+        <div class="step">
+            <span class="step-number">1</span> Navigate to your GuestPulse LIVE website
+        </div>
+        <div class="step">
+            <span class="step-number">2</span> Click the "Login" button or press <strong>Alt + L</strong> to open the login modal
+        </div>
+        <div class="step">
+            <span class="step-number">3</span> Enter your email and password:
+            <ul>
+                <li>For Super Admins: Use the email and password created in section 2</li>
+                <li>For Hotel Admins: Use the credentials provided by your Super Admin</li>
+            </ul>
+        </div>
+        <div class="note">
+            <strong>Security Note:</strong> Always use strong, unique passwords and never share admin credentials with unauthorized personnel.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>4. Super Admin Tasks</h2>
+        <div class="step">
+            <span class="step-number">1</span> <strong>Adding a New Hotel:</strong>
+            <ul>
+                <li>In the Super Admin panel, click the "Add Hotel" button</li>
+                <li>Fill in the hotel details (name, description, etc.)</li>
+                <li>Upload a hotel logo (recommended size: 200px × 60px)</li>
+                <li>Enter notification email for the hotel</li>
+                <li>Click "Create Hotel" to save</li>
+            </ul>
+        </div>
+        <div class="step">
+            <span class="step-number">2</span> <strong>Creating a Hotel Admin:</strong>
+            <ul>
+                <li>In the Super Admin panel, go to the "Admins" tab</li>
+                <li>Click "Add Admin"</li>
+                <li>Enter admin name, email, and password</li>
+                <li>Select the hotel they will manage from the dropdown</li>
+                <li>Click "Create Admin" to save</li>
+            </ul>
+        </div>
+        <div class="step">
+            <span class="step-number">3</span> <strong>Managing Platform Settings:</strong>
+            <ul>
+                <li>Go to the "Platform" tab</li>
+                <li>Update the platform name, logo, and colors</li>
+                <li>Click "Save Platform Settings" to apply changes</li>
+            </ul>
+        </div>
+        <div class="step">
+            <span class="step-number">4</span> <strong>Viewing System Reports:</strong>
+            <ul>
+                <li>Go to the "Reports" tab to view feedback statistics across all hotels</li>
+                <li>Use filters to analyze data by date range, hotel, or issue type</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>5. Hotel Admin Tasks</h2>
+        <div class="step">
+            <span class="step-number">1</span> <strong>Customizing Your Hotel:</strong>
+            <ul>
+                <li>Update hotel name, description, and contact information</li>
+                <li>Upload or update the hotel logo</li>
+                <li>Choose primary and secondary colors using the color pickers</li>
+                <li>Click "Save Settings" to apply your changes</li>
+            </ul>
+        </div>
+        <div class="step">
+            <span class="step-number">2</span> <strong>Setting Up Alert Notifications:</strong>
+            <ul>
+                <li>Enter the email address where you want to receive alerts</li>
+                <li>For SMS notifications (optional), enter a phone number</li>
+                <li>Configure notification preferences (immediate alerts for urgent issues)</li>
+                <li>Click "Save Notification Settings"</li>
+            </ul>
+        </div>
+        <div class="note">
+            <strong>Important:</strong> For email notifications to work, make sure the EmailJS configuration in config.js has been updated with valid service credentials. See the README.md for details.
+        </div>
+        <div class="step">
+            <span class="step-number">3</span> <strong>Managing Feedback:</strong>
+            <ul>
+                <li>View all feedback submissions in the "Feedback" tab</li>
+                <li>Update feedback status (New, In Progress, Resolved)</li>
+                <li>Add internal notes to feedback items</li>
+                <li>Export feedback reports as CSV if needed</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>6. Generating QR Codes</h2>
+        <div class="step">
+            <span class="step-number">1</span> In the Hotel Admin panel, go to the "QR Codes" tab
+        </div>
+        <div class="step">
+            <span class="step-number">2</span> Enter the room number or location identifier
+        </div>
+        <div class="step">
+            <span class="step-number">3</span> Click "Generate QR Code" button
+        </div>
+        <div class="step">
+            <span class="step-number">4</span> Download the QR code as PNG or SVG using the provided buttons
+        </div>
+        <div class="step">
+            <span class="step-number">5</span> Print the QR code and place it in guest rooms, preferably near the bed or desk
+        </div>
+        
+        <div class="qr-example">
+            [QR Code Example Would Appear Here]
+        </div>
+        
+        <div class="note">
+            <strong>Display Tip:</strong> For best results, include brief instructions with the QR code, such as "Scan to share feedback about your stay" and your hotel logo.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>7. Testing Your System</h2>
+        <div class="step">
+            <span class="step-number">1</span> Scan the QR code with your smartphone
+        </div>
+        <div class="step">
+            <span class="step-number">2</span> Test both the "Everything is Good" and "I Have an Issue" paths
+        </div>
+        <div class="step">
+            <span class="step-number">3</span> Submit a test issue and verify that you receive the notification email
+        </div>
+        <div class="step">
+            <span class="step-number">4</span> Check that the confirmation message displays correctly
+        </div>
+        <div class="step">
+            <span class="step-number">5</span> Verify that the feedback appears in the Hotel Admin panel
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>8. Troubleshooting Common Issues</h2>
+        <div class="step">
+            <strong>Firebase Connection Issues:</strong>
+            <ul>
+                <li>Verify that your Firebase configuration in firebase-init.js is correct</li>
+                <li>Check that Authentication, Firestore Database, and Storage are enabled in Firebase Console</li>
+                <li>Review Firebase console for any errors or security rule issues</li>
+            </ul>
+        </div>
+        <div class="step">
+            <strong>Email Notifications Not Working:</strong>
+            <ul>
+                <li>Verify EmailJS configuration in config.js</li>
+                <li>Check spam folder for notification emails</li>
+                <li>Test your EmailJS template directly in EmailJS dashboard</li>
+            </ul>
+        </div>
+        <div class="step">
+            <strong>QR Code Issues:</strong>
+            <ul>
+                <li>Ensure QR codes are not too small when printed (minimum 1.5" × 1.5")</li>
+                <li>Check that the URL in the QR code properly includes hotel and room parameters</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 GuestPulse LIVE | For support, contact: support@guestpulse.example.com</p>
+    </div>
+    
+    <div class="no-print">
+        <p><em>Note: This page can be printed or saved as a PDF for distribution to hotel staff.</em></p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperAdmin Dashboard - Hotel Feedback System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-page">
+    <header class="dashboard-header">
+        <div class="header-content">
+            <h1>SuperAdmin Dashboard</h1>
+            <div class="header-actions">
+                <span class="user-info" id="user-email"></span>
+                <button class="btn btn-secondary" id="logout-btn">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Create Admin Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Create New Admin</h2>
+                </div>
+                <div class="card-body">
+                    <form id="create-admin-form" class="admin-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="admin-email">Admin Email</label>
+                                <input type="email" id="admin-email" name="adminEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="generated-password">Generated Password</label>
+                                <div class="password-field">
+                                    <input type="text" id="generated-password" name="generatedPassword" readonly>
+                                    <button type="button" class="btn btn-small" id="generate-password-btn">Generate</button>
+                                    <button type="button" class="btn btn-small" id="copy-password-btn" title="Copy Password">📋</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="hotel-name">Hotel Name</label>
+                                <input type="text" id="hotel-name" name="hotelName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="hotel-image-url">Hotel Image URL</label>
+                                <input type="url" id="hotel-image-url" name="hotelImageURL" placeholder="https://example.com/hotel-image.jpg">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="hotel-website">Hotel Website URL</label>
+                                <input type="url" id="hotel-website" name="hotelWebsite" placeholder="https://yourhotel.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="notification-email">Notification Email</label>
+                                <input type="email" id="notification-email" name="notificationEmail" placeholder="feedback@yourhotel.com" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="hotel-description">Hotel Description</label>
+                            <textarea id="hotel-description" name="hotelDescription" rows="3" placeholder="Brief description of the hotel..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="create-admin-btn">
+                            <span class="btn-text">Create Admin</span>
+                            <span class="btn-loader" style="display: none;">
+                                <i class="spinner"></i>
+                            </span>
+                        </button>
+                    </form>
+                    
+                    <div id="create-admin-message" class="message" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Admins List Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Created Admins</h2>
+                    <button class="btn btn-secondary" id="refresh-admins-btn">Refresh</button>
+                </div>
+                <div class="card-body">
+                    <div id="admins-list" class="admins-list">
+                        <div class="loading" id="admins-loading">Loading admins...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/superadmin.js"></script>
+</body>
+</html>

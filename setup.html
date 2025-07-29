@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Setup - Hotel Feedback System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>System Setup</h1>
+                <p>Initialize the Hotel Feedback System</p>
+            </div>
+            
+            <div class="setup-content">
+                <div id="setup-status" class="loading">
+                    Setting up the system...
+                </div>
+                
+                <div id="setup-complete" style="display: none;">
+                    <h3>Setup Complete!</h3>
+                    <p><strong>SuperAdmin Account Created</strong></p>
+                    <div class="credentials">
+                        <p><strong>Email:</strong> superadmin@hotelrbac.com</p>
+                        <p><strong>Password:</strong> SuperAdmin123!</p>
+                        <p class="warning">⚠️ Please change this password after first login!</p>
+                    </div>
+                    <a href="index.html" class="btn btn-primary">Go to Login</a>
+                </div>
+                
+                <div id="setup-error" style="display: none;">
+                    <h3>Setup Error</h3>
+                    <p id="error-details"></p>
+                    <button class="btn btn-secondary" onclick="location.reload()">Try Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script>
+        // Dedicated setup functionality
+        class SetupManager {
+            constructor() {
+                this.init();
+            }
+
+            async init() {
+                try {
+                    await this.setupSystem();
+                } catch (error) {
+                    this.showError(error.message);
+                }
+            }
+
+            async setupSystem() {
+                // Check if already initialized
+                if (await this.checkIfSuperAdminExists()) {
+                    this.showComplete('System already initialized');
+                    return;
+                }
+
+                await this.createSuperAdmin();
+                this.showComplete('SuperAdmin created successfully');
+            }
+
+            async checkIfSuperAdminExists() {
+                try {
+                    const snapshot = await superAdminsRef.limit(1).get();
+                    return !snapshot.empty;
+                } catch (error) {
+                    console.error('Error checking SuperAdmin:', error);
+                    return false;
+                }
+            }
+
+            async createSuperAdmin() {
+                const superAdminEmail = appConfig.defaultSuperAdmin.email;
+                const superAdminPassword = appConfig.defaultSuperAdmin.password;
+
+                // Create authentication account
+                const userCredential = await auth.createUserWithEmailAndPassword(
+                    superAdminEmail, 
+                    superAdminPassword
+                );
+                const user = userCredential.user;
+
+                // Store SuperAdmin data in Firestore
+                await superAdminsRef.doc(user.uid).set({
+                    email: superAdminEmail,
+                    role: appConfig.roles.SUPERADMIN,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    isActive: true
+                });
+
+                // Sign out after creating the account
+                await auth.signOut();
+            }
+
+            showComplete(message) {
+                document.getElementById('setup-status').style.display = 'none';
+                document.getElementById('setup-complete').style.display = 'block';
+                console.log(message);
+            }
+
+            showError(message) {
+                document.getElementById('setup-status').style.display = 'none';
+                document.getElementById('setup-error').style.display = 'block';
+                document.getElementById('error-details').textContent = message;
+                console.error('Setup error:', message);
+            }
+        }
+
+        // Start setup when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new SetupManager();
+        });
+    </script>
+
+    <style>
+        .setup-content {
+            text-align: center;
+        }
+        
+        .credentials {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .credentials p {
+            margin: 8px 0;
+            font-family: monospace;
+        }
+        
+        .warning {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 15px !important;
+            font-family: inherit !important;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            border-top: 2px solid #3498db;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html>
